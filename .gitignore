@@ -7,6 +7,5 @@ __pycache__/
 .ipynb_checkpoints/
 *.log
 
-# Datos / salidas (evita que se versionen archivos que cambian seguido)
-datos/
+# Salidas generadas al consultar años o exportar (no versionar)
 resultados/

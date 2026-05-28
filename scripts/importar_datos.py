@@ -5,13 +5,15 @@ import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-# Permite ejecutar el script directo: `python scripts/importar_datos.py`
-# (en ese caso, el root del proyecto no queda automáticamente en sys.path).
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
-from src.clima.importacion import leer_csv_clima, solo_columnas  # noqa: E402
+from scripts.paths import datos_csv, ensure_project_on_syspath, resultados_dir  # noqa: E402
+
+ensure_project_on_syspath()
+
+from scripts.clima.importacion import leer_csv_clima, solo_columnas  # noqa: E402
 
 
 def main() -> int:
@@ -23,7 +25,6 @@ def main() -> int:
     - ver una muestra rápida (preview)
     - opcionalmente exportar las columnas extraídas a JSON
     """
-    # Evita caracteres raros en Windows al imprimir acentos (si la terminal lo permite).
     try:
         sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[attr-defined]
     except Exception:
@@ -33,8 +34,8 @@ def main() -> int:
     parser.add_argument(
         "-i",
         "--input",
-        default=str(Path("datos") / "clima_datos.csv"),
-        help="Ruta del CSV de entrada (por defecto: datos/clima_datos.csv)",
+        default="",
+        help="Ruta del CSV de entrada (por defecto: datos/clima_datos.csv en el repo)",
     )
     parser.add_argument(
         "--encoding",
@@ -50,27 +51,22 @@ def main() -> int:
     parser.add_argument(
         "--to-json",
         default="",
-        help="Si se setea, guarda un JSON con columnas extraídas en esta ruta.",
-    )
-    parser.add_argument(
-        "--resultados-dir",
-        default="resultados",
-        help="Directorio donde se guardan salidas (por defecto: resultados/)",
+        help="Nombre o ruta del JSON de salida (relativo a resultados/ si no es absoluta)",
     )
 
     args = parser.parse_args()
 
-    # Estandarizamos una carpeta de salida (útil para local y Colab).
-    resultados_dir = Path(args.resultados_dir)
-    resultados_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = resultados_dir()
 
-    # Importación: leer y tipar (todavía sin cálculos de indicadores).
-    records = leer_csv_clima(args.input, encoding=args.encoding)
+    csv_path = datos_csv() if not args.input else Path(args.input)
+    if not csv_path.exists():
+        print(f"Error: no se encontró el archivo: {csv_path}")
+        return 1
 
-    # Estructura alternativa (columnas como listas) para facilitar análisis posterior.
+    records = leer_csv_clima(csv_path, encoding=args.encoding)
     cols = solo_columnas(records)
 
-    print(f"Archivo: {args.input}")
+    print(f"Archivo: {csv_path}")
     print(f"Registros: {len(records)}")
     print(f"Columnas extraídas: {', '.join([k for k, v in cols.items() if len(v) > 0])}")
     print("")
@@ -80,6 +76,8 @@ def main() -> int:
 
     if args.to_json:
         out = Path(args.to_json)
+        if not out.is_absolute():
+            out = out_dir / out.name
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(cols, ensure_ascii=False, indent=2), encoding="utf-8")
         print("")
@@ -92,4 +90,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

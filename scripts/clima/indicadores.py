@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Iterable
 
-from src.clima.importacion import ClimaRecord
+from scripts.clima.importacion import ClimaRecord
 
 
 @dataclass(frozen=True)

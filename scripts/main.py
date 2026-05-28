@@ -3,12 +3,17 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+# Bootstrap mínimo: permite `python scripts/main.py` desde cualquier cwd (Colab/local).
+_ROOT = Path(__file__).resolve().parents[1]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
-from src.clima.importacion import leer_csv_clima  # noqa: E402
-from src.clima.indicadores import indicadores_a_texto, indicadores_para_anio  # noqa: E402
+from scripts.paths import datos_csv, ensure_project_on_syspath, resultados_dir  # noqa: E402
+
+ensure_project_on_syspath()
+
+from scripts.clima.importacion import leer_csv_clima  # noqa: E402
+from scripts.clima.indicadores import indicadores_a_texto, indicadores_para_anio  # noqa: E402
 
 
 def _pedir_opcion() -> str:
@@ -49,11 +54,16 @@ def main() -> int:
     except Exception:
         pass
 
-    resultados_dir = Path("resultados")
-    resultados_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = resultados_dir()
 
-    # Carga inicial del dataset (importación).
-    records = leer_csv_clima(Path("datos") / "clima_datos.csv")
+    # Rutas absolutas respecto al repo (compatible con Colab sin depender del cwd).
+    csv_path = datos_csv()
+    if not csv_path.exists():
+        print(f"Error: no se encontró el archivo de datos: {csv_path}")
+        print("Verificá que exista datos/clima_datos.csv en el proyecto.")
+        return 1
+
+    records = leer_csv_clima(csv_path)
 
     while True:
         print("")
@@ -77,7 +87,7 @@ def main() -> int:
             print(contenido)
 
             # Guardamos el mismo contenido mostrado por pantalla para trazabilidad.
-            out_path = resultados_dir / f"indicadores_{year}.txt"
+            out_path = out_dir / f"indicadores_{year}.txt"
             out_path.write_text(contenido + "\n", encoding="utf-8")
             print(f"\nArchivo generado: {out_path}")
 
