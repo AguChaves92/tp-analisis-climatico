@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Módulo para importar datos climáticos desde CSV y normalizarlos en registros tipados."""
+
 import csv
 from dataclasses import dataclass
 from pathlib import Path

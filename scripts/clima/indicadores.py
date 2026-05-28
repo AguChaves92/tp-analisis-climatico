@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Módulo para calcular indicadores climáticos por año y formatearlos como texto."""
+
 from dataclasses import dataclass
 from typing import Iterable
 
