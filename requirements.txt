@@ -1,0 +1,5 @@
+# Dependencias para el proyecto de Análisis Climático
+
+# Requerido para generar gráficos de temperatura
+# Nota: En Google Colab está disponible por defecto
+matplotlib>=3.0.0
