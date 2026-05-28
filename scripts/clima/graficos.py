@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+"""Módulo para generar gráficos de temperatura y validar el rango de años del dataset."""
+
 from pathlib import Path
 from typing import Iterable
 

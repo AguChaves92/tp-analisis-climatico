@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+"""Entrada principal del proyecto de análisis climático.
+
+Este módulo implementa un menú interactivo para:
+- obtener indicadores climáticos anualizados,
+- generar gráficos de variación de temperatura,
+- guardar resultados en la carpeta `resultados/`.
+"""
+
 import sys
 from pathlib import Path
 
