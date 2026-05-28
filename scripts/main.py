@@ -14,6 +14,7 @@ ensure_project_on_syspath()
 
 from scripts.clima.importacion import leer_csv_clima  # noqa: E402
 from scripts.clima.indicadores import indicadores_a_texto, indicadores_para_anio  # noqa: E402
+from scripts.clima.graficos import generar_grafico_variacion_temperatura, obtener_rango_anos, validar_ano_en_dataset  # noqa: E402
 
 
 def _pedir_opcion() -> str:
@@ -39,6 +40,34 @@ def _pedir_anio(*, min_year: int = 1940, max_year: int = 2025) -> int:
             print(f"Año fuera de rango. Debe estar entre {min_year} y {max_year}.")
             continue
 
+        return year
+
+
+def _pedir_anio_validado(records, *, prompt: str = "Ingresá un año de inicio") -> int:
+    """
+    Solicita un año y valida que exista en el dataset.
+    
+    Args:
+        records: Lista de registros para validación
+        prompt: Mensaje personalizado para solicitar el año
+    """
+    try:
+        min_year, max_year = obtener_rango_anos(records)
+    except ValueError as e:
+        raise ValueError(f"Error al obtener rango de años: {e}")
+    
+    while True:
+        raw = input(f"{prompt} ({min_year}-{max_year}): ").strip()
+        try:
+            year = int(raw)
+        except ValueError:
+            print("Año inválido. Ingresá un número entero.")
+            continue
+        
+        if not validar_ano_en_dataset(records, year):
+            print(f"El año {year} no existe en el dataset. Disponible: {min_year}-{max_year}")
+            continue
+            
         return year
 
 
@@ -69,7 +98,8 @@ def main() -> int:
         print("")
         print("=== Menú - Análisis Climático ===")
         print("1) Obtener indicadores para un año")
-        print("2) Salir")
+        print("2) Generar gráfico de variación de temperatura")
+        print("3) Salir")
         print("")
 
         opcion = _pedir_opcion()
@@ -92,6 +122,34 @@ def main() -> int:
             print(f"\nArchivo generado: {out_path}")
 
         elif opcion == "2":
+            print("\n--- Generar Gráfico de Variación de Temperatura ---")
+            try:
+                year_inicio = _pedir_anio_validado(
+                    records, 
+                    prompt="Ingresá el año de inicio para el gráfico"
+                )
+                
+                print(f"\nGenerando gráfico desde {year_inicio} hasta el final del dataset...")
+                
+                grafico_path = generar_grafico_variacion_temperatura(records, year_inicio)
+                
+                print(f"✓ Gráfico generado exitosamente!")
+                print(f"📊 Archivo: {grafico_path}")
+                print(f"📁 Ubicación: {grafico_path.resolve()}")
+                
+            except ValueError as e:
+                print(f"Error: {e}")
+                continue
+            except ImportError as e:
+                print(f"Error: {e}")
+                print("\nNota: En Google Colab, matplotlib está disponible por defecto.")
+                print("En entorno local, instálalo con: pip install matplotlib")
+                continue
+            except Exception as e:
+                print(f"Error inesperado al generar el gráfico: {e}")
+                continue
+
+        elif opcion == "3":
             print("Saliendo...")
             return 0
         else:

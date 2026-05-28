@@ -9,3 +9,19 @@ __pycache__/
 
 # Salidas generadas al consultar años o exportar (no versionar)
 resultados/
+
+# Archivos temporales del sistema
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDEs y editores
+.vscode/
+.idea/
+*.sublime-*
+
+# Archivos de configuración local
+.env
+config.local.*
